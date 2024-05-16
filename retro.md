@@ -1,3 +1,20 @@
+# Retro #2
+
+Diana
+
+-   Why my git was clunkier?
+-   liked 4 min rotations
+-   got more used to using semi-automatic-inline approvals
+
+Nitsan
+
+-   options to do next
+-   1. start using a file
+-   2. try it out with an agent
+-   3. test changing multiple lines for replacement
+
+-   To test with an agent, prompt
+
 # Retro #1
 
 Nitsan
