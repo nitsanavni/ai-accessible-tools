@@ -5,26 +5,25 @@ from approvaltests.inline.inline_options import InlineOptions
 def replace_range_in_code(
     code: str, line_start: int, line_end: int, replacement_text: str
 ) -> str:
-    code = """
-print("hello world!")
-# Hi Nitsan!!!
-print("hello Joel!")
-"""
-    return code
+    # Split the code into a list of lines
+    lines = code.split('\n')
+    
+    # Replace the specified range of lines with the replacement text
+    lines[line_start - 1:line_end] = [replacement_text]
+    
+    # Join the lines back into a single string
+    return '\n'.join(lines)
 
 
 def test_replace():
     """
-    
-    print("hello world!")
+    1. print("hello world!")
     # Hi Nitsan!!!
-    print("hello Joel!")
-    ***** DELETE ME TO APPROVE *****
+    3. print("hello Joel!")
     """
-    code = """
-print("hello world!")
-print("hello Diana!")
-print("hello Joel!")
+    code = """1. print("hello world!")
+2. print("hello Diana!")
+3. print("hello Joel!")
 """
     verify(
         replace_range_in_code(
