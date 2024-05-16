@@ -19,6 +19,7 @@ def test_replace():
     """
     1. print("hello world!")
     # Hi Nitsan!!!
+    # Hello Chat!
     3. print("hello Joel!")
     """
     code = """1. print("hello world!")
@@ -27,7 +28,8 @@ def test_replace():
 """
     verify(
         replace_range_in_code(
-            code, line_start=2, line_end=2, replacement_text="# Hi Nitsan!!!"
+            code, line_start=2, line_end=2, replacement_text="""# Hi Nitsan!!!
+# Hello Chat!"""
         ),
         options=Options().inline(InlineOptions.semi_automatic()),
     )
