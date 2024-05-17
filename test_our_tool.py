@@ -1,5 +1,7 @@
 from approvaltests import verify, Options
 from approvaltests.inline.inline_options import InlineOptions
+import openai
+from filecache import filecache
 
 semi = Options().inline(InlineOptions.semi_automatic())
 
@@ -33,6 +35,39 @@ def test_replace():
         ),
         options=semi,
     )
+
+
+@filecache
+def prompt(the_prompt: str, sample=0) -> str:
+    return (
+        openai.chat.completions.create(
+            model="gpt-4o", messages=[{"role": "user", "content": the_prompt}]
+        )
+        .choices[0]
+        .message.content
+    )
+
+
+def test_prompt():
+    """
+    Thought:
+    The user is initiating a knock-knock joke, and I should respond appropriately to continue the interaction.
+
+    Answer:
+    Who's there?
+    ***** DELETE ME TO APPROVE *****
+    """
+    a_prompt = """format: format your response as described in the <format> section, but don't include the <format> tags.
+<format>
+Thought:
+{think first, you thoughts here}
+Answer:
+{your answer here}
+</format>
+<query>
+knock knock
+</query>"""
+    verify(prompt(a_prompt), options=semi)
 
 
 def agent_replace(code: str, task: str) -> str:
