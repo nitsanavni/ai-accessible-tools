@@ -117,12 +117,11 @@ print(5)
 
 def parse_replacements(response: str):
     replacements = []
-    # TODO: support line-range '-1'
-    pattern = re.compile(r"<replace>\n(\d+)-(\d+)\n(.*?)\n</replace>", re.DOTALL)
+    pattern = re.compile(r"<replace>\n(-?\d+)(?:-(\d+))?\n(.*?)\n</replace>", re.DOTALL)
 
     for match in pattern.finditer(response):
         start_line = int(match.group(1))
-        end_line = int(match.group(2))
+        end_line = int(match.group(2)) if match.group(2) is not None else start_line
         replacement_code = match.group(3)
         replacements.append((start_line, end_line, replacement_code))
 
@@ -145,6 +144,10 @@ def test_parse_replacements():
     <replace>
     4-5
     print(2)
+    </replace>
+    <replace>
+    -1--1
+    # This is the last line now
     </replace>
     """
     response = """<replace>
