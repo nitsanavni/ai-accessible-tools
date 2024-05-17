@@ -18,7 +18,7 @@ def prompt(the_prompt: str, sample=0) -> str:
 def test_prompt():
     """
     Thought:
-    This appears to be the start of a classic "knock knock" joke. I should continue with the traditional response format.
+    This is the beginning of a knock-knock joke, and the usual response is to say "Who's there?"
 
     Answer:
     Who's there?

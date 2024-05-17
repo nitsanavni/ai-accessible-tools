@@ -1,5 +1,7 @@
 import inspect
 import re
+import sys
+import subprocess
 
 from add_line_numbers import add_line_numbers
 from fizzbuzz import fizzbuzz
@@ -90,25 +92,9 @@ def prompt_ai_to_replace(code: str, task: str) -> str:
 def test_agent_response_to_prompt():
     """
     <thinking-first>
-    I need to switch lines 2 and 4 in the original code. This means I'll place the content of line 4 where line 2 was and vice versa. The lines currently are:
-    1. `print(1)`
-    2. `print(2)`
-    3. `print(3)`
-    4. `print(4)`
-    5. `print(5)`
-
-    After switching, the new order will be:
-    1. `print(1)`
-    2. `print(4)`
-    3. `print(3)`
-    4. `print(2)`
-    5. `print(5)`
-
-    I will now proceed to write the necessary replacements.
+    To switch lines 2 and 4, I need to replace the content of line 2 with the content of line 4 and vice versa. The line numbers are 1-based, and the replacement should keep the formatting consistent.
     </thinking-first>
-
     <response>
-    <replace-tool>
     <replace>
     2-3
     print(4)
@@ -117,7 +103,6 @@ def test_agent_response_to_prompt():
     4-5
     print(2)
     </replace>
-    </replace-tool>
     </response>
     """
     code = """print(1)
@@ -189,13 +174,13 @@ def ai_replace(code: str, task: str) -> str:
 # the intention is valuable, but the execution is incorrect
 def test_ai_replaces():
     """
-    def fizzbuzz(n: int) -> str:
+    def fizzbuzz(number: int) -> str:
+        x = lambda d, w: number % d == 0 and w or ""
         x = lambda d, w: n % d == 0 and w or ""
-        fizz_result = x(3, "Fizz")
-        b = x(5, "Buzz")
+        a = x(3, "Fizz")
         b = x(5, "Buzz")
 
-        return fizz_result + b or str(n)
+        return a + b or str(n)
     """
     fizzbuzz_code = inspect.getsource(fizzbuzz)
     task = "!just! rename **one** symbol"
@@ -213,16 +198,42 @@ def replace(file: str, task: str):
         f.write(code)
 
 
+def read_comments(file):
+    with open(file) as f:
+        return "\n".join([l for l in f.read().splitlines() if "# " in l])
+
+
 def test_replace_in_file(temp_fizzbuzz_copy):
     """
-    # This lambda function checks if 'n' is divisible by 'd' and returns 'w' or an empty string
-    # Verify the output of fizzbuzz for the first 15 numbers
+    # Lambda function to check divisibility and return the corresponding word
+    # Testing FizzBuzz for the first 15 numbers and verifying the output
     """
     replace(file=temp_fizzbuzz_copy, task="add exactly two comments")
 
-    def read_comments(file):
-        with open(file) as f:
-            return "\n".join([l for l in f.read().splitlines() if "# " in l])
+    verify(
+        read_comments(temp_fizzbuzz_copy),
+        options=semi,
+    )
+
+
+if __name__ == "__main__":
+    file = sys.argv[1]
+    task = " ".join(sys.argv[2:])
+    replace(file, task)
+
+
+def test_from_cli(temp_fizzbuzz_copy):
+    """
+    # TODO:
+    # - Add more test cases for the fizzbuzz function
+    # - Refactor fizzbuzz to be more optimized
+    # - Add type annotations where missing
+    # - Write documentation for existing functions
+    # - Implement edge cases for fizzbuzz
+    """
+    cmd = f"python replace.py {temp_fizzbuzz_copy} 'add a todo list as a multi-line comment'"
+
+    subprocess.run(cmd, shell=True)
 
     verify(
         read_comments(temp_fizzbuzz_copy),
