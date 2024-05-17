@@ -2,6 +2,8 @@ from approvaltests import verify, Options
 from approvaltests.inline.inline_options import InlineOptions
 import openai
 from filecache import filecache
+import inspect
+import re
 
 semi = Options().inline(InlineOptions.semi_automatic())
 
@@ -52,7 +54,7 @@ def prompt(the_prompt: str, sample=0) -> str:
 def test_prompt():
     """
     Thought:
-    The user is initiating a knock-knock joke, and I should respond appropriately to continue the interaction.
+    It looks like the user is initiating a "knock knock" joke, so I should respond in kind to continue the joke format.
 
     Answer:
     Who's there?
@@ -91,7 +93,7 @@ def myfunction():
     verify(add_line_numbers(code), options=semi)
 
 
-def agent_replace_prompt(code: str, task: str) -> str:
+def replace_prompt(code: str, task: str) -> str:
     code_with_line_numbers = add_line_numbers(code)
     return f"""task:
 {task}
@@ -128,22 +130,23 @@ def myfunction():
 </example-2>
 <constraints>
 do not repeat line numbers
-end line number is exclusive
+end line number is exclusive, to replace a single line, use e.g. 17-18
 </constraints>
 </replace-tool>
 </tools>
 """
 
 
-def agent_replace(code: str, task: str) -> str:
-    return prompt(agent_replace_prompt(code, task))
+def prompt_ai_to_replace(code: str, task: str) -> str:
+    return prompt(replace_prompt(code, task))
 
 
-def test_agent_uses_replace():
+def test_agent_response_to_prompt():
     """
     <thinking-first>
-    To switch lines 2 and 4 in the provided code, simply place the content of line 4 where line 2 is and the content of line 2 where line 4 is. This maintains the order specified in the task.
+    To switch the lines 2 and 4, I'll need to swap the content of these lines. I will use the replace tool to achieve this. Lines will be replaced appropriately to maintain correct order and ensure the code still functions as expected.
     </thinking-first>
+
     <response>
     <replace-tool>
     <replace>
@@ -164,4 +167,113 @@ print(4)
 print(5)
 """
     task = "switch 2 4"
-    verify(agent_replace(code, task), options=semi)
+    verify(prompt_ai_to_replace(code, task), options=semi)
+
+
+def parse_replacements(response: str):
+    """
+    Parses a response string and returns a list of tuples representing replacements.
+    Each tuple contains the start line, end line, and the replacement code.
+
+    Args:
+    response (str): The input string containing replacement directives.
+
+    Returns:
+    List[Tuple[int, int, str]]: A list of tuples with replacements.
+    """
+    replacements = []
+    pattern = re.compile(r"<replace>\n(\d+)-(\d+)\n(.*?)\n</replace>", re.DOTALL)
+
+    for match in pattern.finditer(response):
+        start_line = int(match.group(1))
+        end_line = int(match.group(2))
+        replacement_code = match.group(3)
+        replacements.append((start_line, end_line, replacement_code))
+
+    return replacements
+
+
+def format_replacements(replacements):
+    return "\n".join(
+        [f"<replace>\n{s}-{e}\n{r}\n</replace>" for s, e, r in replacements]
+    )
+
+
+def test_parse_replacements():
+    """
+    <replace>
+    2-3
+    print(4)
+    print(7)
+    </replace>
+    <replace>
+    4-5
+    print(2)
+    </replace>
+    """
+    response = """<replace>
+2-3
+print(4)
+print(7)
+</replace>
+<replace>
+4-5
+print(2)
+</replace>
+"""
+    verify(
+        format_replacements(parse_replacements(response)),
+        options=semi,
+    )
+
+
+def ai_replace(code: str, task: str) -> str:
+    ai_response = prompt_ai_to_replace(code, task)
+    replacements = parse_replacements(ai_response)
+    for replace in replacements[::-1]:
+        code = replace_range_in_code(code, *replace)
+    return code, ai_response, replacements
+
+
+def fizzbuzz(n: int) -> str:
+    x = lambda d, w: n % d == 0 and w or ""
+    a = x(3, "Fizz")
+    b = x(5, "Buzz")
+
+    return a + b or str(n)
+
+
+# note how the rename is incomplete
+# the intention is valuable, but the execution is incorrect
+def test_ai_replaces():
+    """
+    <thinking-first>
+    To rename one symbol in the given code, I need to identify a meaningful and concise symbol to rename while ensuring the code remains functionally identical. The symbol `x` seems to be a good candidate for renaming to make it clearer, such as `fizzbuzz_lambda`.
+    </thinking-first>
+
+    <response>
+    <replace-tool>
+    <replace>
+    2-3
+        fizzbuzz_lambda = lambda d, w: n % d == 0 and w or ""
+    </replace>
+    </replace-tool>
+    </response>
+
+    def fizzbuzz(n: int) -> str:
+        fizzbuzz_lambda = lambda d, w: n % d == 0 and w or ""
+        a = x(3, "Fizz")
+        b = x(5, "Buzz")
+
+        return a + b or str(n)
+
+
+    <replace>
+    2-3
+        fizzbuzz_lambda = lambda d, w: n % d == 0 and w or ""
+    </replace>
+    """
+    fizzbuzz_code = inspect.getsource(fizzbuzz)
+    task = "!just! rename **one** symbol"
+    code, response, replacements = ai_replace(code=fizzbuzz_code, task=task)
+    verify(f"{response}\n\n{code}\n\n{format_replacements(replacements)}", options=semi)
