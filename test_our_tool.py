@@ -55,7 +55,6 @@ def test_prompt():
 
     Answer:
     Who's there?
-    ***** DELETE ME TO APPROVE *****
     """
     a_prompt = """format: format your response as described in the <format> section, but don't include the <format> tags.
 <format>
@@ -72,16 +71,16 @@ knock knock
 
 def add_line_numbers(code: str) -> str:
     lines = code.split("\n")
-    return "\n".join([f"{i+1}\t{line}" for i, line in enumerate(lines)])
+    return "\n".join([f"{i+1}\t|{line}" for i, line in enumerate(lines)])
 
 
 def test_add_line_numbers():
     """
-    1	import mymodule
-    2
-    3	def myfunction():
-    4	    return 1
-    5
+    1	|import mymodule
+    2	|
+    3	|def myfunction():
+    4	|    return 1
+    5	|
     """
     code = """import mymodule
 
