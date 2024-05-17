@@ -1,0 +1,4 @@
+- [ ] extract to separate files
+- [ ] replace in file
+- [ ] register test[s] -> revert the edit on failure
+  - e.g. `black <file>`
