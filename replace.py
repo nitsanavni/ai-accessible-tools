@@ -117,6 +117,7 @@ print(5)
 
 def parse_replacements(response: str):
     replacements = []
+    # TODO: support line-range '-1'
     pattern = re.compile(r"<replace>\n(\d+)-(\d+)\n(.*?)\n</replace>", re.DOTALL)
 
     for match in pattern.finditer(response):
@@ -154,6 +155,10 @@ print(7)
 <replace>
 4-5
 print(2)
+</replace>
+<replace>
+-1
+# This is the last line now
 </replace>
 """
     verify(
