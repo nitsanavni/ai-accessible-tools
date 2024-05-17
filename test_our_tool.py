@@ -10,7 +10,7 @@ def replace_range_in_code(
     code: str, line_start: int, line_end: int, replacement_text: str
 ) -> str:
     lines = code.split("\n")
-    lines[line_start - 1 : line_end] = [replacement_text]
+    lines[line_start - 1 : line_end - 1] = [replacement_text]
     return "\n".join(lines)
 
 
@@ -19,6 +19,7 @@ def test_replace():
     1. print("hello world!")
     # Hi Nitsan!!!
     # Hello Chat!
+    2. print("hello Diana!")
     3. print("hello Joel!")
     """
     code = """1. print("hello world!")
@@ -94,15 +95,43 @@ def agent_replace_prompt(code: str, task: str) -> str:
     code_with_line_numbers = add_line_numbers(code)
     return f"""task:
 {task}
+<original-code-with-line-numbers>
+{code_with_line_numbers}
+</original-code-with-line-numbers>
 format: format your response as described in the <format> section.
 <format>
 <thinking-first>
 {{think first, your thoughts here}}
 </thinking-first>
-<new-code>
-{{your new code here}}
-</new-code>
+<response>
+{{your response here}}
+</response>
 </format>
+<tools>
+<replace-tool>
+<example-1>
+<replace>
+17-23
+def myfunction():
+    return 1
+</replace>
+<replace>
+27-27
+# Do the thing
+</replace>
+</example-1>
+<example-2>
+<replace>
+-1
+# This is the last line now
+</replace>
+</example-2>
+<constraints>
+do not repeat line numbers
+end line number is exclusive
+</constraints>
+</replace-tool>
+</tools>
 """
 
 
@@ -113,20 +142,20 @@ def agent_replace(code: str, task: str) -> str:
 def test_agent_uses_replace():
     """
     <thinking-first>
-    The task requires switching the second and fourth elements of an unspecified list. Assuming the input is a list, I will swap the elements at indices 1 and 3. This requires a simple index assignment.
+    To switch lines 2 and 4 in the provided code, simply place the content of line 4 where line 2 is and the content of line 2 where line 4 is. This maintains the order specified in the task.
     </thinking-first>
-    <new-code>
-    def switch_2_4(lst):
-        if len(lst) >= 4:
-            lst[1], lst[3] = lst[3], lst[1]
-        return lst
-
-    # Example usage
-    example_list = [1, 2, 3, 4, 5]
-    result = switch_2_4(example_list)
-    print(result)  # Output should be [1, 4, 3, 2, 5]
-    </new-code>
-    ***** DELETE ME TO APPROVE *****
+    <response>
+    <replace-tool>
+    <replace>
+    2-3
+    print(4)
+    </replace>
+    <replace>
+    4-5
+    print(2)
+    </replace>
+    </replace-tool>
+    </response>
     """
     code = """print(1)
 print(2)
