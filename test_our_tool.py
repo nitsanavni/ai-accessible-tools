@@ -1,11 +1,9 @@
-from approvaltests import verify, Options
-from approvaltests.inline.inline_options import InlineOptions
-import openai
-from filecache import filecache
 import inspect
 import re
 
-semi = Options().inline(InlineOptions.semi_automatic())
+from fizzbuzz import fizzbuzz
+from verify import verify, semi
+from prompt import prompt
 
 
 def replace_range_in_code(
@@ -40,21 +38,10 @@ def test_replace():
     )
 
 
-@filecache
-def prompt(the_prompt: str, sample=0) -> str:
-    return (
-        openai.chat.completions.create(
-            model="gpt-4o", messages=[{"role": "user", "content": the_prompt}]
-        )
-        .choices[0]
-        .message.content
-    )
-
-
 def test_prompt():
     """
     Thought:
-    It looks like the user is initiating a "knock knock" joke, so I should respond in kind to continue the joke format.
+    This appears to be the start of a classic "knock knock" joke. I should continue with the traditional response format.
 
     Answer:
     Who's there?
@@ -144,7 +131,21 @@ def prompt_ai_to_replace(code: str, task: str) -> str:
 def test_agent_response_to_prompt():
     """
     <thinking-first>
-    To switch the lines 2 and 4, I'll need to swap the content of these lines. I will use the replace tool to achieve this. Lines will be replaced appropriately to maintain correct order and ensure the code still functions as expected.
+    I need to switch lines 2 and 4 in the original code. This means I'll place the content of line 4 where line 2 was and vice versa. The lines currently are:
+    1. `print(1)`
+    2. `print(2)`
+    3. `print(3)`
+    4. `print(4)`
+    5. `print(5)`
+
+    After switching, the new order will be:
+    1. `print(1)`
+    2. `print(4)`
+    3. `print(3)`
+    4. `print(2)`
+    5. `print(5)`
+
+    I will now proceed to write the necessary replacements.
     </thinking-first>
 
     <response>
@@ -235,42 +236,47 @@ def ai_replace(code: str, task: str) -> str:
     return code, ai_response, replacements
 
 
-def fizzbuzz(n: int) -> str:
-    x = lambda d, w: n % d == 0 and w or ""
-    a = x(3, "Fizz")
-    b = x(5, "Buzz")
-
-    return a + b or str(n)
-
-
 # note how the rename is incomplete
 # the intention is valuable, but the execution is incorrect
 def test_ai_replaces():
     """
     <thinking-first>
-    To rename one symbol in the given code, I need to identify a meaningful and concise symbol to rename while ensuring the code remains functionally identical. The symbol `x` seems to be a good candidate for renaming to make it clearer, such as `fizzbuzz_lambda`.
+    In the given code, we need to rename exactly one symbol. Essentially, renaming a symbol means changing its identifier (variable name, function name, etc.) to something else. The symbols in the code are: `fizzbuzz`, `n`, `x`, `d`, `w`, `a`, `b`, and their usages.
+
+    To keep the change meaningful yet minimal, I'll choose to rename the symbol `a` since it appears twice (declaration and usage), making it a straightforward but effective modification.
     </thinking-first>
 
     <response>
     <replace-tool>
     <replace>
-    2-3
-        fizzbuzz_lambda = lambda d, w: n % d == 0 and w or ""
+    3-4
+        fizz_result = x(3, "Fizz")
+        b = x(5, "Buzz")
+    </replace>
+    <replace>
+    6-7
+        return fizz_result + b or str(n)
     </replace>
     </replace-tool>
     </response>
 
     def fizzbuzz(n: int) -> str:
-        fizzbuzz_lambda = lambda d, w: n % d == 0 and w or ""
-        a = x(3, "Fizz")
+        x = lambda d, w: n % d == 0 and w or ""
+        fizz_result = x(3, "Fizz")
+        b = x(5, "Buzz")
         b = x(5, "Buzz")
 
-        return a + b or str(n)
+        return fizz_result + b or str(n)
 
 
     <replace>
-    2-3
-        fizzbuzz_lambda = lambda d, w: n % d == 0 and w or ""
+    3-4
+        fizz_result = x(3, "Fizz")
+        b = x(5, "Buzz")
+    </replace>
+    <replace>
+    6-7
+        return fizz_result + b or str(n)
     </replace>
     """
     fizzbuzz_code = inspect.getsource(fizzbuzz)
