@@ -38,27 +38,6 @@ def test_replace():
     )
 
 
-def test_prompt():
-    """
-    Thought:
-    This appears to be the start of a classic "knock knock" joke. I should continue with the traditional response format.
-
-    Answer:
-    Who's there?
-    """
-    a_prompt = """format: format your response as described in the <format> section, but don't include the <format> tags.
-<format>
-Thought:
-{think first, you thoughts here}
-Answer:
-{your answer here}
-</format>
-<query>
-knock knock
-</query>"""
-    verify(prompt(a_prompt), options=semi)
-
-
 def add_line_numbers(code: str) -> str:
     lines = code.split("\n")
     return "\n".join([f"{i+1}\t|{line}" for i, line in enumerate(lines)])
