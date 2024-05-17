@@ -185,7 +185,7 @@ def ai_replace(code: str, task: str) -> str:
     return code, ai_response, replacements
 
 
-# note how the rename is incomplete
+# note how the rename is incomplete / incorrect
 # the intention is valuable, but the execution is incorrect
 def test_ai_replaces():
     """
@@ -201,3 +201,30 @@ def test_ai_replaces():
     task = "!just! rename **one** symbol"
     code, response, replacements = ai_replace(code=fizzbuzz_code, task=task)
     verify(code, options=semi)
+
+
+def replace(file: str, task: str):
+    with open(file) as f:
+        code = f.read()
+
+    code, response, replacements = ai_replace(code, task)
+
+    with open(file, "w") as f:
+        f.write(code)
+
+
+def test_replace_in_file(temp_fizzbuzz_copy):
+    """
+    # This lambda function checks if 'n' is divisible by 'd' and returns 'w' or an empty string
+    # Verify the output of fizzbuzz for the first 15 numbers
+    """
+    replace(file=temp_fizzbuzz_copy, task="add exactly two comments")
+
+    def read_comments(file):
+        with open(file) as f:
+            return "\n".join([l for l in f.read().splitlines() if "# " in l])
+
+    verify(
+        read_comments(temp_fizzbuzz_copy),
+        options=semi,
+    )
