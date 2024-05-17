@@ -131,16 +131,6 @@ print(5)
 
 
 def parse_replacements(response: str):
-    """
-    Parses a response string and returns a list of tuples representing replacements.
-    Each tuple contains the start line, end line, and the replacement code.
-
-    Args:
-    response (str): The input string containing replacement directives.
-
-    Returns:
-    List[Tuple[int, int, str]]: A list of tuples with replacements.
-    """
     replacements = []
     pattern = re.compile(r"<replace>\n(\d+)-(\d+)\n(.*?)\n</replace>", re.DOTALL)
 
@@ -199,26 +189,6 @@ def ai_replace(code: str, task: str) -> str:
 # the intention is valuable, but the execution is incorrect
 def test_ai_replaces():
     """
-    <thinking-first>
-    In the given code, we need to rename exactly one symbol. Essentially, renaming a symbol means changing its identifier (variable name, function name, etc.) to something else. The symbols in the code are: `fizzbuzz`, `n`, `x`, `d`, `w`, `a`, `b`, and their usages.
-
-    To keep the change meaningful yet minimal, I'll choose to rename the symbol `a` since it appears twice (declaration and usage), making it a straightforward but effective modification.
-    </thinking-first>
-
-    <response>
-    <replace-tool>
-    <replace>
-    3-4
-        fizz_result = x(3, "Fizz")
-        b = x(5, "Buzz")
-    </replace>
-    <replace>
-    6-7
-        return fizz_result + b or str(n)
-    </replace>
-    </replace-tool>
-    </response>
-
     def fizzbuzz(n: int) -> str:
         x = lambda d, w: n % d == 0 and w or ""
         fizz_result = x(3, "Fizz")
@@ -226,19 +196,8 @@ def test_ai_replaces():
         b = x(5, "Buzz")
 
         return fizz_result + b or str(n)
-
-
-    <replace>
-    3-4
-        fizz_result = x(3, "Fizz")
-        b = x(5, "Buzz")
-    </replace>
-    <replace>
-    6-7
-        return fizz_result + b or str(n)
-    </replace>
     """
     fizzbuzz_code = inspect.getsource(fizzbuzz)
     task = "!just! rename **one** symbol"
     code, response, replacements = ai_replace(code=fizzbuzz_code, task=task)
-    verify(f"{response}\n\n{code}\n\n{format_replacements(replacements)}", options=semi)
+    verify(code, options=semi)

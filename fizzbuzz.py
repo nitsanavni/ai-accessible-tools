@@ -28,3 +28,7 @@ def test_fizzbuzz():
     FizzBuzz
     """
     verify("\n".join([fizzbuzz(n) for n in range(1, 16)]), options=semi)
+
+
+def test_fizzbuzz_of_1():
+    assert fizzbuzz(1) == "1"
