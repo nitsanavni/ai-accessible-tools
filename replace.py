@@ -12,6 +12,8 @@ from prompt import prompt
 def replace_range_in_code(
     code: str, line_start: int, line_end: int, replacement_text: str
 ) -> str:
+    if line_start == -1:
+        return "\n".join([code, replacement_text])
     lines = code.split("\n")
     lines[line_start - 1 : line_end - 1] = [replacement_text]
     return "\n".join(lines)
@@ -24,19 +26,23 @@ def test_replace():
     # Hello Chat!
     2. print("hello Diana!")
     3. print("hello Joel!")
+
+    # This is the last line now
     """
     code = """1. print("hello world!")
 2. print("hello Diana!")
 3. print("hello Joel!")
 """
-    verify(
-        replace_range_in_code(
-            code,
-            line_start=2,
-            line_end=2,
-            replacement_text="""# Hi Nitsan!!!
+    code = replace_range_in_code(
+        code,
+        line_start=2,
+        line_end=2,
+        replacement_text="""# Hi Nitsan!!!
 # Hello Chat!""",
-        ),
+    )
+    code = replace_range_in_code(code, -1, -1, "# This is the last line now")
+    verify(
+        code,
         options=semi,
     )
 
