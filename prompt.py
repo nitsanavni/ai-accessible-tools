@@ -4,7 +4,7 @@ from filecache import filecache
 from verify import semi, verify
 
 
-@filecache
+@filecache(1e9)
 def prompt(the_prompt: str, sample=0) -> str:
     return (
         openai.chat.completions.create(
@@ -18,7 +18,7 @@ def prompt(the_prompt: str, sample=0) -> str:
 def test_prompt():
     """
     Thought:
-    This is the beginning of a knock-knock joke, and the usual response is to say "Who's there?"
+    The user is initiating a classic "knock knock" joke. The typical response is to continue the joke by saying "Who's there?"
 
     Answer:
     Who's there?

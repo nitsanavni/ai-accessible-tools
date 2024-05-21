@@ -2,6 +2,7 @@ import inspect
 import re
 import sys
 import subprocess
+import os
 
 from add_line_numbers import add_line_numbers
 from fizzbuzz import fizzbuzz
@@ -54,7 +55,9 @@ def replace_prompt(code: str, task: str) -> str:
 <original-code-with-line-numbers>
 {code_with_line_numbers}
 </original-code-with-line-numbers>
-format: format your response as described in the <format> section.
+format:
+- format your response as described in the <format> section.
+- for multiple replacements, include multiple <replace> tags.
 <format>
 <thinking-first>
 {{think first, your thoughts here}}
@@ -87,6 +90,17 @@ do not repeat line numbers
 end line number is exclusive, to replace a single line, use e.g. 17-18
 </constraints>
 </replace-tool>
+<example-responses>
+<example-response-1>
+<thinking>was asked to add a comment, a comment would be good before line 3</thinking>
+<response>
+<replace>
+3-3
+# This is a comment
+</replace>
+</response>
+</example-response-1>
+</example-responses>
 </tools>
 """
 
@@ -98,7 +112,7 @@ def prompt_ai_to_replace(code: str, task: str) -> str:
 def test_agent_response_to_prompt():
     """
     <thinking-first>
-    To switch lines 2 and 4, I need to replace the content of line 2 with the content of line 4 and vice versa. The line numbers are 1-based, and the replacement should keep the formatting consistent.
+    To switch lines 2 and 4, I need to replace the content of line 2 with line 4, and vice versa. Thus, I will update each of these lines accordingly.
     </thinking-first>
     <response>
     <replace>
@@ -176,7 +190,7 @@ print(2)
     )
 
 
-def ai_replace(code: str, task: str) -> str:
+def ai_replace(code: str, task: str):
     ai_response = prompt_ai_to_replace(code, task)
     replacements = parse_replacements(ai_response)
     for replace in replacements[::-1]:
@@ -188,9 +202,8 @@ def ai_replace(code: str, task: str) -> str:
 # the intention is valuable, but the execution is incorrect
 def test_ai_replaces():
     """
-    def fizzbuzz(number: int) -> str:
-        x = lambda d, w: number % d == 0 and w or ""
-        x = lambda d, w: n % d == 0 and w or ""
+    def fizzbuzz(n: int) -> str:
+        check_divisibility = lambda d, w: n % d == 0 and w or ""
         a = x(3, "Fizz")
         b = x(5, "Buzz")
 
@@ -208,19 +221,27 @@ def replace(file: str, task: str):
 
     code, response, replacements = ai_replace(code, task)
 
+    if "DEBUG" in os.environ:
+        print("response", response)
+
     with open(file, "w") as f:
         f.write(code)
+
+    return response, replacements
 
 
 def read_comments(file):
     with open(file) as f:
-        return "\n".join([l for l in f.read().splitlines() if "# " in l])
+        return "\n".join(
+            ["comments:"] + [l for l in f.read().splitlines() if "# " in l]
+        )
 
 
 def test_replace_in_file(temp_fizzbuzz_copy):
     """
-    # Lambda function to check divisibility and return the corresponding word
-    # Testing FizzBuzz for the first 15 numbers and verifying the output
+    comments:
+    # Lambda function to check divisibility and return corresponding word
+    # Test the FizzBuzz function for numbers 1 to 15 and compare with the expected output
     """
     replace(file=temp_fizzbuzz_copy, task="add exactly two comments")
 
@@ -238,18 +259,32 @@ if __name__ == "__main__":
 
 def test_from_cli(temp_fizzbuzz_copy):
     """
-    # TODO:
-    # - Add more test cases for the fizzbuzz function
-    # - Refactor fizzbuzz to be more optimized
-    # - Add type annotations where missing
-    # - Write documentation for existing functions
-    # - Implement edge cases for fizzbuzz
-    """
-    cmd = f"python replace.py {temp_fizzbuzz_copy} 'add a todo list as a multi-line comment'"
+    from verify import verify, semi
 
-    subprocess.run(cmd, shell=True)
+    # TODO:
+    # 1. Add more test cases to cover edge cases.
+    # 2. Improve the fizzbuzz function to handle larger inputs efficiently.
+    # 3. Use more descriptive variable names in the fizzbuzz function.
+    # 4. Ensure that verify method and options from verify module are correctly implemented.
+    def fizzbuzz(n: int) -> str:
+        x = lambda d, w: n % d == 0 and w or ""
+        a = x(3, "Fizz")
+        b = x(5, "Buzz")
+
+        return a + b or str(n)
+    """
+
+    task = "add a todo list as a comment"
+    run_self = "python replace.py"
+    cmd = f"{run_self} {temp_fizzbuzz_copy} '{task}'"
+
+    subprocess.run(cmd, shell=True, stdout=None, env=os.environ.copy() | {"DEBUG": "1"})
 
     verify(
-        read_comments(temp_fizzbuzz_copy),
+        "\n".join(
+            [l for l in open(temp_fizzbuzz_copy).read().splitlines() if '"""' not in l][
+                :13
+            ]
+        ),
         options=semi,
     )

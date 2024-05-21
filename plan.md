@@ -11,6 +11,11 @@
 
 Thoughts
 
+- testing multiple iterations
+  - non inline
+  - storyboard
+  - verify multiple views of the story - each in a separate approved file
+    - 
 - `tool` vs. `ai-tool`: `ai-tool` means at least one more prompt iteration
 - `dashboard watch [--list] [--add <glob>|<>] --remove <glob>`
 - timebox / iterations-box / reties
@@ -23,3 +28,17 @@ Thoughts
   - recent actions
   - recent files
   - pwd
+- tool choice with priority
+- tools ideas
+  - edit
+    - refactor
+      - rename
+      - extract (introduce)
+      - inline
+    - replace lines
+      - replace line and keep indentation
+      - insert
+    - replace occurrences
+    - move (slide) lines
+    - dup lines
+- writing a full coherent python function is easier than replacing a single line
