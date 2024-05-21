@@ -1,3 +1,6 @@
+# Do
+
+- [ ] build it outside-in, start with the loop structure
 - [ ] replace_until
   - [ ] replace and black
 - [ ] a view-based execution loop
@@ -9,13 +12,13 @@
 - [x] extract to separate files
 - [x] replace in file
 
-Thoughts
+# Thoughts
 
+- testing each frame of a loop independently
 - testing multiple iterations
   - non inline
   - storyboard
-  - verify multiple views of the story - each in a separate approved file
-    - 
+    - verify multiple views of the story - each in a separate approved file
 - `tool` vs. `ai-tool`: `ai-tool` means at least one more prompt iteration
 - `dashboard watch [--list] [--add <glob>|<>] --remove <glob>`
 - timebox / iterations-box / reties
